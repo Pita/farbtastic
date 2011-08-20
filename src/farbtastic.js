@@ -3,6 +3,8 @@
   
 var __debug = true;
 
+var __factor = 0.6;
+
 $.fn.farbtastic = function (options) {
   $.farbtastic(this, options);
   return this;
@@ -66,11 +68,17 @@ $._farbtastic = function (container, options) {
   /**
    * Change color with HSL triplet [0..1, 0..1, 0..1]
    */
-  fb.setHSL = function (hsl) {
+  fb.setHSL = function (hsl) {    
     fb.hsl = hsl;
-    fb.rgb = fb.HSLToRGB(hsl);
+    
+    var convertedHSL = [hsl[0]]
+    convertedHSL[1] = hsl[1]*__factor+((1-__factor)/2);
+    convertedHSL[2] = hsl[2]*__factor+((1-__factor)/2);
+    
+    fb.rgb = fb.HSLToRGB(convertedHSL);
     fb.color = fb.pack(fb.rgb);
     fb.updateDisplay();
+    
     return this;
   }
 
@@ -215,6 +223,7 @@ $._farbtastic = function (container, options) {
     var size = fb.square * 2, sq = fb.square;
     function calculateMask(sizex, sizey, outputPixel) {
       var isx = 1 / sizex, isy = 1 / sizey;
+      
       for (var y = 0; y <= sizey; ++y) {
         var l = 1 - y * isy;
         for (var x = 0; x <= sizex; ++x) {
@@ -222,6 +231,10 @@ $._farbtastic = function (container, options) {
           // From sat/lum to alpha and color (grayscale)
           var a = 1 - 2 * Math.min(l * s, (1 - l) * s);
           var c = (a > 0) ? ((2 * l - 1 + a) * .5 / a) : 0;
+          
+          a = a*__factor+(1-__factor)/2;
+          c = c*__factor+(1-__factor)/2;
+          
           outputPixel(x, y, c, a);
         }
       }      
@@ -304,6 +317,7 @@ $._farbtastic = function (container, options) {
         y2 = 2 * fb.square * (.5 - fb.hsl[2]),
         c1 = fb.invert ? '#fff' : '#000',
         c2 = fb.invert ? '#000' : '#fff';
+        
     var circles = [
       { x: x1, y: y1, r: r,             c: '#000', lw: lw + 1 },
       { x: x1, y: y1, r: fb.markerSize, c: '#fff', lw: lw },
@@ -403,6 +417,7 @@ $._farbtastic = function (container, options) {
     else {
       var sat = Math.max(0, Math.min(1, -(pos.x / fb.square / 2) + .5));
       var lum = Math.max(0, Math.min(1, -(pos.y / fb.square / 2) + .5));
+      
       fb.setHSL([fb.hsl[0], sat, lum]);
     }
     return false;
